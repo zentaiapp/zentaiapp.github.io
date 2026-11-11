@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Live Crypto Price Tracker</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    body {
+      background: #0f172a;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 20px;
+    }
+    .card {
+      background: #1e293b;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+      width: 100%;
+      max-width: 420px;
+      text-align: center;
+      color: #f8fafc;
+    }
+    h2 {
+      margin-top: 0;
+      color: #38bdf8;
+    }
+    select {
+      width: 100%;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid #334155;
+      background: #0f172a;
+      color: #f8fafc;
+      font-size: 15px;
+      outline: none;
+      margin-bottom: 16px;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      background: #38bdf8;
+      color: #0f172a;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    button:hover {
+      background: #0284c7;
+      color: #fff;
+    }
+    .result {
+      margin-top: 24px;
+      padding: 18px;
+      background: #0f172a;
+      border-radius: 8px;
+      border: 1px solid #334155;
+    }
+    .price {
+      font-size: 28px;
+      font-weight: bold;
+      color: #4ade80;
+      margin-top: 8px;
+    }
+    .change {
+      font-size: 14px;
+      margin-top: 6px;
+    }
+    .up { color: #4ade80; }
+    .down { color: #f87171; }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <h2>Live Price Tracker</h2>
+    
+    <select id="coinSelect">
+      <option value="bitcoin">Bitcoin (BTC)</option>
+      <option value="ethereum">Ethereum (ETH)</option>
+      <option value="solana">Solana (SOL)</option>
+      <option value="dogecoin">Dogecoin (DOGE)</option>
+    </select>
+
+    <button id="fetchBtn" onclick="getPrice()">Current Price Dekhein</button>
+
+    <div class="result" id="resultBox" style="display: none;">
+      <div id="coinName" style="color: #94a3b8; font-size: 14px;"></div>
+      <div class="price" id="coinPrice">₹0.00</div>
+      <div class="change" id="priceChange"></div>
+    </div>
+  </div>
+
+  <script>
+    async function getPrice() {
+      const coin = document.getElementById("coinSelect").value;
+      const btn = document.getElementById("fetchBtn");
+      const resultBox = document.getElementById("resultBox");
+      const coinPrice = document.getElementById("coinPrice");
+      const coinName = document.getElementById("coinName");
+      const priceChange = document.getElementById("priceChange");
+
+      btn.disabled = true;
+      btn.innerText = "Data fetch ho raha hai...";
+
+      try {
+        // Direct browser se fetch — No CORS issue, No backend required
+        const url = `https://api.coingecko.com/api/v3/simple/price?ids=${coin}&vs_currencies=inr&include_24hr_change=true`;
+        
+        const response = await fetch(url);
+        const data = await response.json();
+
+        // JSON parse logic
+        const price = data[coin].inr;
+        const change = data[coin].inr_24h_change.toFixed(2);
+
+        // Display results
+        resultBox.style.display = "block";
+        coinName.innerText = coin.toUpperCase() + " / INR";
+        coinPrice.innerText = "₹" + price.toLocaleString("en-IN");
+
+        if (change >= 0) {
+          priceChange.className = "change up";
+          priceChange.innerText = `▲ 24h Change: +${change}%`;
+        } else {
+          priceChange.className = "change down";
+          priceChange.innerText = `▼ 24h Change: ${change}%`;
+        }
+
+      } catch (error) {
+        alert("Data lane me dikkat aayi: " + error.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerText = "Current Price Dekhein";
+      }
+    }
+  </script>
+
+</body>
+</html>
