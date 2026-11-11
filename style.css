@@ -1,0 +1,319 @@
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,500&family=Work+Sans:wght@400;500;600&display=swap');
+
+:root {
+  --ink: #1B1430;
+  --ink-soft: #2A2047;
+  --marigold: #F2A93B;
+  --rose: #E8576B;
+  --ivory: #FBF3E6;
+  --ivory-dim: #E7DCCB;
+  --leaf: #3E7C59;
+  --radius-card: 22px;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: radial-gradient(circle at 20% -10%, #342454 0%, var(--ink) 55%);
+  color: var(--ivory);
+  font-family: 'Work Sans', sans-serif;
+  min-height: 100%;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.wrap {
+  width: 100%;
+  max-width: 460px;
+  padding: 32px 20px 48px;
+}
+
+.brand {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 28px;
+}
+
+.brand-mark {
+  font-family: 'Fraunces', serif;
+  font-size: 1.5rem;
+  color: var(--marigold);
+}
+
+.brand-tag {
+  font-size: 0.8rem;
+  color: var(--ivory-dim);
+}
+
+h1 {
+  font-family: 'Fraunces', serif;
+  font-weight: 600;
+  font-size: 2rem;
+  line-height: 1.15;
+  margin: 0 0 8px;
+  color: var(--ivory);
+}
+
+h1 em {
+  font-style: italic;
+  color: var(--marigold);
+}
+
+.sub {
+  color: var(--ivory-dim);
+  font-size: 0.95rem;
+  margin: 0 0 28px;
+  line-height: 1.5;
+}
+
+/* --- form card --- */
+.card {
+  background: var(--ivory);
+  color: var(--ink);
+  border-radius: var(--radius-card);
+  padding: 26px 22px;
+  box-shadow: 0 30px 60px -20px rgba(0,0,0,0.5);
+}
+
+label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+  margin: 18px 0 6px;
+}
+
+label:first-child { margin-top: 0; }
+
+input[type="text"], textarea, select {
+  width: 100%;
+  font-family: 'Work Sans', sans-serif;
+  font-size: 1rem;
+  padding: 11px 13px;
+  border: 1.5px solid #D8CCB4;
+  border-radius: 12px;
+  background: #fff;
+  color: var(--ink);
+}
+
+textarea {
+  resize: vertical;
+  min-height: 86px;
+}
+
+input:focus, textarea:focus, select:focus {
+  outline: 2px solid var(--rose);
+  outline-offset: 1px;
+  border-color: var(--rose);
+}
+
+.theme-row {
+  display: flex;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.theme-swatch {
+  flex: 1;
+  height: 44px;
+  border-radius: 10px;
+  border: 2px solid transparent;
+  cursor: pointer;
+  position: relative;
+}
+
+.theme-swatch[aria-checked="true"] {
+  border-color: var(--ink);
+}
+
+.theme-swatch input {
+  position: absolute;
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  cursor: pointer;
+}
+
+.btn-primary {
+  width: 100%;
+  margin-top: 24px;
+  padding: 14px;
+  border: none;
+  border-radius: 14px;
+  background: var(--rose);
+  color: var(--ivory);
+  font-family: 'Work Sans', sans-serif;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.btn-primary:active { transform: scale(0.98); }
+
+.footnote {
+  text-align: center;
+  color: var(--ivory-dim);
+  font-size: 0.78rem;
+  margin-top: 22px;
+}
+
+.footnote a { color: var(--marigold); }
+
+/* --- install banner --- */
+.install-banner {
+  display: none;
+  align-items: center;
+  gap: 12px;
+  background: var(--ink-soft);
+  border: 1px solid rgba(242,169,59,0.35);
+  border-radius: 14px;
+  padding: 12px 14px;
+  margin-bottom: 20px;
+}
+
+.install-banner.show { display: flex; }
+
+.install-banner p {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--ivory-dim);
+  flex: 1;
+}
+
+.install-banner button {
+  background: var(--marigold);
+  color: var(--ink);
+  border: none;
+  border-radius: 10px;
+  padding: 8px 14px;
+  font-weight: 600;
+  font-size: 0.82rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+/* --- view page --- */
+.wish-stage {
+  min-height: 100vh;
+  min-height: 100dvh;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 18px;
+}
+
+.wish-card {
+  width: 100%;
+  max-width: 420px;
+  border-radius: 28px;
+  padding: 44px 28px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 40px 80px -30px rgba(0,0,0,0.6);
+  animation: rise 0.7s cubic-bezier(.2,.9,.3,1) both;
+}
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(24px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.wish-occasion {
+  font-size: 0.78rem;
+  letter-spacing: 0.02em;
+  opacity: 0.75;
+  margin-bottom: 14px;
+}
+
+.wish-name {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 1.9rem;
+  margin: 0 0 18px;
+  line-height: 1.2;
+}
+
+.wish-message {
+  font-size: 1.02rem;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.wish-from {
+  margin-top: 26px;
+  font-size: 0.85rem;
+  opacity: 0.8;
+}
+
+/* theme palettes applied to .wish-card */
+.theme-dusk   { background: linear-gradient(160deg,#2A2047,#1B1430); color: #FBF3E6; }
+.theme-marigold { background: linear-gradient(160deg,#F2A93B,#E8576B); color: #1B1430; }
+.theme-leaf   { background: linear-gradient(160deg,#EFE6D2,#C8DCC6); color: #1B1430; }
+
+.wish-actions {
+  margin-top: 30px;
+  display: flex;
+  gap: 10px;
+}
+
+.wish-actions button, .wish-actions a {
+  flex: 1;
+  padding: 12px;
+  border-radius: 12px;
+  border: none;
+  font-family: 'Work Sans', sans-serif;
+  font-weight: 600;
+  font-size: 0.88rem;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--ivory);
+  color: var(--ink);
+}
+
+.confetti {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.confetti span {
+  position: absolute;
+  top: -10%;
+  width: 8px;
+  height: 14px;
+  opacity: 0.9;
+  animation: fall linear forwards;
+}
+
+@keyframes fall {
+  to { transform: translateY(115vh) rotate(380deg); opacity: 0.3; }
+}
+
+.make-your-own {
+  margin-top: 36px;
+  text-align: center;
+  font-size: 0.82rem;
+  color: var(--ivory-dim);
+}
+
+.make-your-own a { color: var(--marigold); font-weight: 600; text-decoration: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .wish-card, .confetti span { animation: none !important; }
+}

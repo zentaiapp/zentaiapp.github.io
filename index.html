@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Wishly — Make a personalized wishing page</title>
+<meta name="description" content="Create a personalized wishing page for Rakhi, farewell, get-well-soon and more — then share it with one link.">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1B1430">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="wrap">
+    <div class="brand">
+      <span class="brand-mark">Wishly</span>
+      <span class="brand-tag">personalized wishing pages</span>
+    </div>
+
+    <h1>Send a wish worth <em>opening</em>.</h1>
+    <p class="sub">Fill this in, get a link, share it on WhatsApp. No signup, nothing to install unless you want to.</p>
+
+    <div class="install-banner" id="installBanner">
+      <p>Install Wishly for faster, one-tap wish creation.</p>
+      <button id="installBtn" type="button">Install</button>
+    </div>
+
+    <form class="card" id="wishForm">
+      <label for="occasion">Occasion</label>
+      <select id="occasion" required>
+        <option value="Farewell">Farewell</option>
+        <option value="Get Well Soon">Get Well Soon</option>
+        <option value="Raksha Bandhan">Raksha Bandhan</option>
+        <option value="Birthday">Birthday</option>
+        <option value="Thank You">Thank You</option>
+      </select>
+
+      <label for="name">Their name</label>
+      <input type="text" id="name" maxlength="40" placeholder="e.g. Priya" required>
+
+      <label for="message">Your message</label>
+      <textarea id="message" maxlength="400" placeholder="Write what you'd actually say to them..." required></textarea>
+
+      <label for="from">Your name (optional)</label>
+      <input type="text" id="from" maxlength="40" placeholder="e.g. From Rahul">
+
+      <label>Card style</label>
+      <div class="theme-row" role="radiogroup">
+        <label class="theme-swatch theme-dusk" aria-checked="true">
+          <input type="radio" name="theme" value="dusk" checked>
+        </label>
+        <label class="theme-swatch theme-marigold" aria-checked="false">
+          <input type="radio" name="theme" value="marigold">
+        </label>
+        <label class="theme-swatch theme-leaf" aria-checked="false">
+          <input type="radio" name="theme" value="leaf">
+        </label>
+      </div>
+
+      <button type="submit" class="btn-primary">Create my wish link</button>
+    </form>
+
+    <p class="footnote">Your message is stored only inside the link itself — nothing is sent to any server.</p>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
