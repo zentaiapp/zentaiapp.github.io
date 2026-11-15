@@ -3,242 +3,460 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>PeerVoice — direct peer voice &amp; video</title>
-<meta name="description" content="Call or message someone straight from your browser. No account, no server in the middle — everything goes peer to peer over WebRTC.">
-<meta name="theme-color" content="#050505">
-
-<link rel="manifest" href="./manifest.json">
-<link rel="icon" href="./logo.svg" type="image/svg+xml">
-<link rel="apple-touch-icon" href="./apple-touch-icon.png">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="PeerVoice">
-<meta name="mobile-web-app-capable" content="yes">
-
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-
-<link rel="stylesheet" href="./style.css">
+<title>ScaleVision</title>
+<style>
+:root{
+  --bg:#1c1d1f; --surface:#262729; --surface2:#303234; --border:#3b3d40;
+  --text:#f2f2f0; --text-dim:#9a9c9f; --accent:#5ec8a6; --accent-dim:#3a8a71;
+  --warn:#e0a44a; --bad:#d9715a; --good:#5ec8a6;
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: light){
+  :root:not([data-theme="dark"]){
+    --bg:#f3f3f1; --surface:#ffffff; --surface2:#eceeec;
+    --border:#d8d9d6; --text:#1c1d1f; --text-dim:#6b6d70;
+  }
+}
+:root[data-theme="dark"]{ --bg:#1c1d1f; --surface:#262729; }
+*{box-sizing:border-box;}
+html,body{height:100%;}
+body{
+  margin:0; background:var(--bg); color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+header{
+  position:sticky; top:0; z-index:10; background:var(--surface);
+  border-bottom:1px solid var(--border);
+  padding:14px 16px calc(14px + env(safe-area-inset-top,0px));
+  margin-top:calc(-1 * env(safe-area-inset-top,0px));
+  display:flex; align-items:center; justify-content:space-between;
+}
+header h1{font-size:17px; margin:0; letter-spacing:0.3px; font-weight:600;}
+header h1 span{color:var(--accent);}
+header button{background:none;border:1px solid var(--border);color:var(--text-dim);
+  border-radius:8px; padding:6px 10px; font-size:12px; cursor:pointer;}
+main{max-width:720px; margin:0 auto; padding:14px 14px 40px;}
+.card{background:var(--surface); border:1px solid var(--border); border-radius:14px;
+  padding:14px; margin-bottom:14px;}
+.card h2{font-size:12px; text-transform:uppercase; letter-spacing:0.08em;
+  color:var(--text-dim); margin:0 0 10px;}
+.row{display:flex; gap:8px; flex-wrap:wrap; align-items:center;}
+button.btn{
+  background:var(--surface2); color:var(--text); border:1px solid var(--border);
+  border-radius:10px; padding:9px 12px; font-size:13px; cursor:pointer;
+  transition:background .15s;
+}
+button.btn:hover{background:var(--border);}
+button.btn.primary{background:var(--accent); color:#0d1411; border-color:var(--accent); font-weight:600;}
+button.btn.primary:hover{background:var(--accent-dim); color:#fff;}
+button.btn.active{outline:2px solid var(--accent);}
+button.btn:disabled{opacity:.4; cursor:not-allowed;}
+select,input[type=number],input[type=text]{
+  background:var(--surface2); color:var(--text); border:1px solid var(--border);
+  border-radius:8px; padding:8px 10px; font-size:13px;
+}
+label.small{font-size:11px; color:var(--text-dim); display:block; margin-bottom:4px;}
+.canvas-wrap{
+  position:relative; width:100%; background:#000; border-radius:10px; overflow:hidden;
+  touch-action:none; border:1px solid var(--border);
+}
+canvas{display:block; width:100%; height:auto; cursor:crosshair;}
+.hint{font-size:12px; color:var(--text-dim); margin-top:8px; line-height:1.5;}
+.badge{display:inline-block; padding:2px 8px; border-radius:999px; font-size:11px; font-weight:600;}
+.badge.high{background:rgba(94,200,166,.15); color:var(--good);}
+.badge.medium{background:rgba(224,164,74,.15); color:var(--warn);}
+.badge.low{background:rgba(217,113,90,.15); color:var(--bad);}
+.result-row{display:flex; justify-content:space-between; align-items:center;
+  padding:8px 0; border-bottom:1px solid var(--border); font-size:13px; gap:8px;}
+.result-row:last-child{border-bottom:none;}
+.result-value{font-variant-numeric:tabular-nums; font-weight:600;}
+.warn-box{background:rgba(224,164,74,.1); border:1px solid rgba(224,164,74,.3);
+  color:var(--warn); border-radius:8px; padding:10px 12px; font-size:12px; margin-top:10px; line-height:1.5;}
+video{display:none;}
+.hidden{display:none !important;}
+.muted{color:var(--text-dim); font-size:12px;}
+</style>
 </head>
 <body>
+<header>
+  <h1>Scale<span>Vision</span></h1>
+  <button id="helpBtn">Help</button>
+</header>
+<main>
 
-<div class="app">
-
-  <!-- ============ HEADER ============ -->
-  <header class="app-header">
-    <div class="brand">
-      <img src="./logo.svg" alt="" class="brand-mark" width="32" height="32">
-      <span class="brand-name">PeerVoice</span>
-    </div>
-    <div class="header-actions">
-      <div class="net-pill" id="netPill" data-state="offline">
-        <span class="net-dot" aria-hidden="true"></span>
-        <span id="netPillLabel">Connecting</span>
-      </div>
-      <button class="btn btn-icon btn-settings" id="btnSettings" aria-label="Settings">
-        <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-      </button>
-    </div>
-  </header>
-
-  <!-- ============ TOAST / ERROR BANNER ============ -->
-  <div class="toast" id="toast" role="alert" aria-live="assertive" hidden>
-    <span id="toastText"></span>
-    <button class="toast-close" id="toastClose" aria-label="Dismiss message">&times;</button>
+<div class="card" id="helpCard">
+  <h2>How it works</h2>
+  <div class="hint">
+    1) Load a photo with your reference object (known size) and the unknown object together. 2) Calibrate: click the two ends of the reference object and enter its real length. 3) Pick a measurement tool and click points on the unknown object. 4) Read the result — every value is an estimate with a confidence level, not an exact measurement.
   </div>
-
-  <!-- ============ INSTALL CARD ============ -->
-  <div class="install-card" id="installCard" hidden>
-    <img src="./icon-192.png" alt="" class="install-icon" width="40" height="40">
-    <div class="install-copy">
-      <p class="install-title" id="installTitle">Install PeerVoice</p>
-      <p class="install-sub" id="installSub">Add it to your home screen for a faster, full-screen experience.</p>
-    </div>
-    <div class="install-actions">
-      <button class="btn btn-primary btn-small" id="btnInstall">Install</button>
-      <button class="btn btn-icon btn-small" id="btnDismissInstall" aria-label="Dismiss">&times;</button>
-    </div>
+  <div class="warn-box">
+    This tool does manual point-based measurement only — it does not auto-detect edges or correct perspective. Keep the reference and target object flat, on the same plane, and roughly the same distance from the camera for accurate results.
   </div>
-
-  <!-- ============ STAGE ============ -->
-  <main class="stage">
-
-    <!-- ---- Permission priming ---- -->
-    <section class="panel" id="panel-permission" data-panel>
-      <div class="orb orb-idle" aria-hidden="true">
-        <img src="./logo.svg" alt="" class="orb-logo">
-      </div>
-      <h1 class="panel-title">Talk to anyone, browser to browser</h1>
-      <p class="panel-sub">PeerVoice connects two devices directly over WebRTC. There's no account, and your calls and messages are never stored on a server.</p>
-      <button class="btn btn-primary" id="btnEnableMic">Allow microphone to continue</button>
-      <p class="panel-footnote">Your audio and video only ever travel to the person you're talking to.</p>
-    </section>
-
-    <!-- ---- Home: your link + contacts ---- -->
-    <section class="panel panel-home" id="panel-home" data-panel hidden>
-      <div class="link-card">
-        <p class="link-card-label">Your link</p>
-        <p class="link-card-sub">Share it once — after that you can just tap their name below.</p>
-        <div class="link-row">
-          <input type="text" id="inviteLinkInput" class="link-input" readonly aria-label="Invite link">
-          <button class="btn btn-icon" id="btnCopyLink" aria-label="Copy link">
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-          </button>
-          <button class="btn btn-icon" id="btnShareLink" aria-label="Share link" hidden>
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
-          </button>
-        </div>
-      </div>
-
-      <div class="people-section">
-        <p class="people-heading">People</p>
-        <div class="people-list" id="contactsList"></div>
-        <p class="people-empty" id="contactsEmpty">No conversations yet — share your link above to add your first contact.</p>
-      </div>
-    </section>
-
-    <!-- ---- Connecting (first-time link join, or dialing a saved contact) ---- -->
-    <section class="panel" id="panel-connecting" data-panel hidden>
-      <div class="orb orb-pulse" aria-hidden="true">
-        <img src="./logo.svg" alt="" class="orb-logo">
-      </div>
-      <h1 class="panel-title" id="connectingTitle">Connecting<span id="connectingTarget"></span></h1>
-      <p class="panel-sub">This usually only takes a moment.</p>
-      <button class="btn btn-text" id="btnCancelConnecting">Cancel</button>
-    </section>
-
-    <!-- ---- Incoming call ---- -->
-    <section class="panel" id="panel-incoming" data-panel hidden>
-      <div class="orb orb-ring" aria-hidden="true">
-        <img src="./logo.svg" alt="" class="orb-logo">
-      </div>
-      <h1 class="panel-title">Incoming <span id="incomingKind">call</span><span id="incomingFrom"></span></h1>
-      <p class="panel-sub">Someone is calling you through PeerVoice.</p>
-      <div class="incoming-actions">
-        <button class="btn btn-circle btn-decline" id="btnDecline" aria-label="Decline call">
-          <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.68 13.31a16 16 0 0 0 3.41 2.6l1.27-1.27a2 2 0 0 1 2.11-.45 11.72 11.72 0 0 0 3.59.57 2 2 0 0 1 2 2V20a2 2 0 0 1-2 2 16 16 0 0 1-15-15 2 2 0 0 1 2-2h3.19a2 2 0 0 1 2 1.72 11.72 11.72 0 0 0 .57 3.59 2 2 0 0 1-.45 2.11z"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
-        </button>
-        <button class="btn btn-circle btn-accept" id="btnAccept" aria-label="Accept call">
-          <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
-        </button>
-      </div>
-    </section>
-
-    <!-- ---- Chat thread with one contact ---- -->
-    <section class="panel panel-chat" id="panel-chat" data-panel hidden>
-      <header class="chat-header">
-        <button class="btn btn-icon" id="btnChatBack" aria-label="Back">
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
-        </button>
-        <div class="chat-header-id">
-          <span class="chat-header-name" id="chatContactName">Name</span>
-          <span class="chat-header-status" id="chatContactStatus">Offline</span>
-        </div>
-        <button class="btn btn-icon" id="btnChatCall" aria-label="Voice call">
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
-        </button>
-        <button class="btn btn-icon" id="btnChatVideo" aria-label="Video call">
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"></polygon><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>
-        </button>
-      </header>
-
-      <div class="chat-messages" id="chatMessages"></div>
-
-      <form class="chat-input-row" id="chatInputForm">
-        <input type="text" id="chatInput" class="chat-input" placeholder="Message" autocomplete="off" maxlength="2000">
-        <button class="btn btn-icon btn-send" id="btnChatSend" type="submit" aria-label="Send">
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
-        </button>
-      </form>
-    </section>
-
-    <!-- ---- Active call (voice or video) ---- -->
-    <section class="panel" id="panel-call" data-panel hidden>
-      <div class="video-stage" id="videoStage" hidden>
-        <video id="remoteVideo" class="remote-video" autoplay playsinline></video>
-        <video id="localVideo" class="local-video" autoplay playsinline muted></video>
-      </div>
-
-      <div class="orb orb-live" id="liveOrb" aria-hidden="true">
-        <canvas id="waveCanvas" width="220" height="220"></canvas>
-        <img src="./logo.svg" alt="" class="orb-logo orb-logo-small">
-      </div>
-      <h1 class="panel-title panel-title-call" id="callPeerLabel">Connected</h1>
-      <p class="call-timer" id="callTimer">00:00</p>
-    </section>
-
-  </main>
-
-  <!-- ============ CONTROL BAR (only during a live call) ============ -->
-  <footer class="control-bar" id="controlBar" hidden>
-    <button class="btn btn-circle btn-control" id="btnMute" aria-pressed="false" aria-label="Mute microphone">
-      <svg class="icon-mic-on" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
-      <svg class="icon-mic-off" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" hidden><line x1="1" y1="1" x2="23" y2="23"></line><path d="M9 9v3a3 3 0 0 0 5.12 2.12M15 9.34V4a3 3 0 0 0-5.94-.6"></path><path d="M17 16.95A7 7 0 0 1 5 12v-2m14 0v2a7 7 0 0 1-.11 1.23"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
-    </button>
-    <button class="btn btn-circle btn-control" id="btnToggleCamera" aria-pressed="false" aria-label="Turn camera off" hidden>
-      <svg class="icon-cam-on" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"></polygon><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>
-      <svg class="icon-cam-off" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" hidden><path d="M16 16v1a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2"></path><path d="M9 5h5a2 2 0 0 1 2 2v3.5l5-3v9l-3.5-2.1"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
-    </button>
-    <button class="btn btn-circle btn-end" id="btnEndCall" aria-label="End call">
-      <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.68 13.31a16 16 0 0 0 3.41 2.6l1.27-1.27a2 2 0 0 1 2.11-.45 11.72 11.72 0 0 0 3.59.57 2 2 0 0 1 2 2V20a2 2 0 0 1-2 2 16 16 0 0 1-15-15 2 2 0 0 1 2-2h3.19a2 2 0 0 1 2 1.72 11.72 11.72 0 0 0 .57 3.59 2 2 0 0 1-.45 2.11z"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
-    </button>
-  </footer>
-
-  <p class="legal-footnote">Zero-backend media &middot; a minimal relay only handles offline alerts &middot; nothing you say is ever stored on a server</p>
 </div>
 
-<!-- ============ SETTINGS MODAL ============ -->
-<div class="modal-backdrop" id="settingsBackdrop" hidden>
-  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
-    <div class="modal-header">
-      <h2 id="settingsTitle">Settings</h2>
-      <button class="btn btn-icon" id="btnCloseSettings" aria-label="Close settings">&times;</button>
-    </div>
-
-    <div class="modal-body">
-      <p class="modal-section-label">Your name</p>
-      <label class="modal-field">
-        <span>Shown to new contacts and in their notifications</span>
-        <input type="text" id="selfNameInput" maxlength="40" placeholder="e.g. Arif">
-      </label>
-
-      <p class="modal-section-label">Theme color</p>
-      <div class="theme-swatches" id="themeSwatches"></div>
-      <label class="modal-field">
-        <span>Custom color</span>
-        <input type="color" id="customColorInput" value="#4f46e5">
-      </label>
-
-      <p class="modal-section-label">Notifications</p>
-      <button class="btn btn-ghost btn-full" id="btnEnablePush">Enable call &amp; message alerts</button>
-      <p class="modal-hint" id="pushHint">Get notified even when PeerVoice isn't open.</p>
-
-      <p class="modal-section-label">Your identity</p>
-      <p class="modal-hint">Your link is tied to this browser. Clearing site data or switching devices will give you a new one, and people will need your new link to reach you again.</p>
+<div class="card">
+  <h2>1 · Image</h2>
+  <div class="row">
+    <button class="btn" id="uploadBtn">Upload photo</button>
+    <button class="btn" id="cameraBtn">Use camera</button>
+    <input type="file" id="fileInput" accept="image/*" class="hidden">
+  </div>
+  <div id="cameraPanel" class="hidden" style="margin-top:10px;">
+    <video id="video" autoplay playsinline></video>
+    <div class="canvas-wrap" style="margin-top:8px;"><video id="liveVideo" autoplay playsinline style="display:block;width:100%;"></video></div>
+    <div class="row" style="margin-top:8px;">
+      <button class="btn primary" id="snapBtn">Capture</button>
+      <button class="btn" id="cancelCamBtn">Cancel</button>
     </div>
   </div>
 </div>
 
-<!-- ============ NAME CONTACT MODAL ============ -->
-<div class="modal-backdrop" id="nameBackdrop" hidden>
-  <div class="modal modal-small" role="dialog" aria-modal="true" aria-labelledby="nameModalTitle">
-    <div class="modal-header">
-      <h2 id="nameModalTitle">Save this contact</h2>
+<div class="card" id="workspaceCard" style="display:none;">
+  <h2>2 · Calibrate &amp; Measure</h2>
+  <div class="row" style="margin-bottom:8px;">
+    <div>
+      <label class="small">Reference length</label>
+      <input type="number" id="refLength" placeholder="e.g. 6" style="width:90px;">
     </div>
-    <div class="modal-body">
-      <label class="modal-field">
-        <span>What should we call them?</span>
-        <input type="text" id="nameModalInput" maxlength="40" placeholder="e.g. Aisha">
-      </label>
-      <button class="btn btn-primary btn-full" id="btnSaveName">Save</button>
+    <div>
+      <label class="small">Unit</label>
+      <select id="refUnit">
+        <option value="mm">mm</option><option value="cm" selected>cm</option>
+        <option value="m">m</option><option value="in">in</option>
+      </select>
     </div>
+    <div>
+      <label class="small">Display unit</label>
+      <select id="dispUnit">
+        <option value="mm">mm</option><option value="cm" selected>cm</option>
+        <option value="m">m</option><option value="in">in</option>
+      </select>
+    </div>
+  </div>
+  <div class="row" style="margin-bottom:8px;">
+    <button class="btn" data-mode="calibrate" id="modeCalibrate">Calibrate reference</button>
+    <button class="btn" data-mode="line" id="modeLine">Measure length</button>
+    <button class="btn" data-mode="rect" id="modeRect">Rectangle (4 pts)</button>
+    <button class="btn" data-mode="circle" id="modeCircle">Circle diameter</button>
+    <button class="btn" data-mode="poly" id="modePoly">Polygon area</button>
+  </div>
+  <div class="row" style="margin-bottom:10px;">
+    <button class="btn" id="undoBtn">Undo point</button>
+    <button class="btn" id="clearBtn">Clear current</button>
+    <button class="btn primary" id="finishPolyBtn" style="display:none;">Finish polygon</button>
+    <span class="muted" id="modeStatus"></span>
+  </div>
+  <div class="canvas-wrap"><canvas id="canvas"></canvas></div>
+  <div class="hint" id="instructions">Load an image to begin.</div>
+  <div class="warn-box">Objects must lie on the same flat plane as the reference for accurate results. Tilted or distant objects will read inaccurately — this tool does not correct perspective.</div>
+</div>
+
+<div class="card" id="resultsCard" style="display:none;">
+  <h2>3 · Results</h2>
+  <div id="resultsBody"></div>
+</div>
+
+<div class="card" id="historyCard" style="display:none;">
+  <h2>Measurement history</h2>
+  <div id="historyBody"></div>
+  <div class="row" style="margin-top:10px;">
+    <button class="btn" id="exportCsvBtn">Export CSV</button>
+    <button class="btn" id="exportImgBtn">Download annotated image</button>
+    <button class="btn" id="clearHistBtn">Clear history</button>
   </div>
 </div>
 
-<audio id="remoteAudio" autoplay playsinline></audio>
+</main>
 
-<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
-<script src="./app.js"></script>
-</body>
-</html>
+<script>
+(function(){
+  "use strict";
+
+  /* ---------- math helpers ---------- */
+  const dist = (a,b) => Math.sqrt((b.x-a.x)**2 + (b.y-a.y)**2);
+  const toMM = (v,unit) => ({mm:v, cm:v*10, m:v*1000, in:v*25.4}[unit]);
+  const fromMM = (v,unit) => ({mm:v, cm:v/10, m:v/1000, in:v/25.4}[unit]);
+  function shoelaceArea(pts){
+    let a=0;
+    for(let i=0;i<pts.length;i++){
+      const p=pts[i], q=pts[(i+1)%pts.length];
+      a += p.x*q.y - q.x*p.y;
+    }
+    return Math.abs(a)/2;
+  }
+  function perimeter(pts, closed){
+    let p=0;
+    for(let i=0;i<pts.length-1;i++) p+=dist(pts[i],pts[i+1]);
+    if(closed) p+=dist(pts[pts.length-1],pts[0]);
+    return p;
+  }
+
+  /* ---------- state ---------- */
+  let img=null, imgNatural={w:0,h:0};
+  let scaleMMperPX=null; // mm per pixel, set by calibration
+  let mode=null;
+  let points=[];
+  let history=JSON.parse(sessionStorage.getItem("sv_history")||"[]");
+  let stream=null;
+  let downloads=null;
+  try{
+    if(window.claude && window.claude.use){
+      window.claude.use("downloads").then(d=>{downloads=d;});
+    }
+  }catch(e){}
+
+  const canvas=document.getElementById("canvas");
+  const ctx=canvas.getContext("2d");
+
+  function setStatus(t){ document.getElementById("modeStatus").textContent=t; }
+  function setInstr(t){ document.getElementById("instructions").textContent=t; }
+
+  /* ---------- image loading ---------- */
+  document.getElementById("uploadBtn").onclick=()=>document.getElementById("fileInput").click();
+  document.getElementById("fileInput").onchange=e=>{
+    const f=e.target.files[0]; if(!f) return;
+    const reader=new FileReader();
+    reader.onload=ev=>loadImageFromSrc(ev.target.result);
+    reader.readAsDataURL(f);
+  };
+
+  function loadImageFromSrc(src){
+    const im=new Image();
+    im.onload=()=>{
+      img=im; imgNatural={w:im.naturalWidth,h:im.naturalHeight};
+      document.getElementById("workspaceCard").style.display="block";
+      resizeCanvas(); draw();
+      setInstr("Choose \u201cCalibrate reference\u201d and click the two ends of your known object.");
+    };
+    im.src=src;
+  }
+
+  function resizeCanvas(){
+    if(!img) return;
+    const maxW = canvas.parentElement.clientWidth;
+    const scale = maxW / imgNatural.w;
+    canvas.width = Math.round(imgNatural.w*Math.min(scale,1));
+    canvas.height = Math.round(imgNatural.h*Math.min(scale,1));
+  }
+  window.addEventListener("resize", ()=>{ if(img){resizeCanvas(); draw();} });
+
+  /* ---------- camera ---------- */
+  document.getElementById("cameraBtn").onclick=async ()=>{
+    const panel=document.getElementById("cameraPanel");
+    panel.classList.remove("hidden");
+    const video=document.getElementById("liveVideo");
+    try{
+      stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"}}});
+      video.srcObject=stream;
+    }catch(err){
+      alert("Camera unavailable ("+err.message+"). Please upload a photo instead.");
+      panel.classList.add("hidden");
+    }
+  };
+  document.getElementById("cancelCamBtn").onclick=stopCamera;
+  function stopCamera(){
+    document.getElementById("cameraPanel").classList.add("hidden");
+    if(stream){ stream.getTracks().forEach(t=>t.stop()); stream=null; }
+  }
+  document.getElementById("snapBtn").onclick=()=>{
+    const video=document.getElementById("liveVideo");
+    const c=document.createElement("canvas");
+    c.width=video.videoWidth; c.height=video.videoHeight;
+    c.getContext("2d").drawImage(video,0,0);
+    loadImageFromSrc(c.toDataURL("image/jpeg",0.92));
+    stopCamera();
+  };
+
+  /* ---------- drawing ---------- */
+  function draw(){
+    if(!img) return;
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.drawImage(img,0,0,canvas.width,canvas.height);
+    // past measurement overlays (light)
+    history.forEach(h=>drawShape(h.canvasPoints, h.mode, "rgba(94,200,166,0.45)"));
+    // current points
+    drawShape(points, mode, "#5ec8a6", true);
+  }
+  function drawShape(pts, m, color, live){
+    if(!pts || pts.length===0) return;
+    ctx.strokeStyle=color; ctx.fillStyle=color; ctx.lineWidth=2;
+    pts.forEach(p=>{
+      ctx.beginPath(); ctx.arc(p.x,p.y,4,0,7); ctx.fill();
+    });
+    if(m==="circle" && pts.length>=2){
+      const r=dist(pts[0],pts[1]);
+      ctx.beginPath(); ctx.arc(pts[0].x,pts[0].y,r,0,7); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(pts[0].x,pts[0].y); ctx.lineTo(pts[1].x,pts[1].y); ctx.stroke();
+    } else if(m==="poly" || m==="rect"){
+      ctx.beginPath();
+      pts.forEach((p,i)=> i===0?ctx.moveTo(p.x,p.y):ctx.lineTo(p.x,p.y));
+      if(pts.length>2 || m==="rect") ctx.closePath();
+      ctx.stroke();
+    } else {
+      ctx.beginPath();
+      pts.forEach((p,i)=> i===0?ctx.moveTo(p.x,p.y):ctx.lineTo(p.x,p.y));
+      ctx.stroke();
+    }
+  }
+
+  canvas.addEventListener("click", e=>{
+    if(!img || !mode) { if(img && !mode) setStatus("Pick a tool above first."); return; }
+    const rect=canvas.getBoundingClientRect();
+    const x=(e.clientX-rect.left)*(canvas.width/rect.width);
+    const y=(e.clientY-rect.top)*(canvas.height/rect.height);
+    points.push({x,y});
+    maybeComplete();
+    draw();
+  });
+
+  function maybeComplete(){
+    if(mode==="calibrate" && points.length===2) finishCalibration();
+    if(mode==="line" && points.length===2) finishLine();
+    if(mode==="rect" && points.length===4) finishRect();
+    if(mode==="circle" && points.length===2) finishCircle();
+    document.getElementById("finishPolyBtn").style.display = (mode==="poly" && points.length>=3) ? "inline-block" : "none";
+  }
+
+  /* ---------- mode buttons ---------- */
+  const modeButtons={calibrate:"modeCalibrate",line:"modeLine",rect:"modeRect",circle:"modeCircle",poly:"modePoly"};
+  Object.keys(modeButtons).forEach(m=>{
+    document.getElementById(modeButtons[m]).onclick=()=>{
+      if(m!=="calibrate" && scaleMMperPX===null){
+        alert("Calibrate the reference object first.");
+        return;
+      }
+      mode=m; points=[];
+      Object.values(modeButtons).forEach(id=>document.getElementById(id).classList.remove("active"));
+      document.getElementById(modeButtons[m]).classList.add("active");
+      document.getElementById("finishPolyBtn").style.display="none";
+      const instr={
+        calibrate:"Click the two ends of your reference object.",
+        line:"Click two points to measure a length.",
+        rect:"Click 4 corners of the rectangle, in order.",
+        circle:"Click the center, then the edge.",
+        poly:"Click each corner, then press \u201cFinish polygon\u201d."
+      };
+      setInstr(instr[m]);
+      draw();
+    };
+  });
+  document.getElementById("undoBtn").onclick=()=>{ points.pop(); draw(); };
+  document.getElementById("clearBtn").onclick=()=>{ points=[]; draw(); document.getElementById("finishPolyBtn").style.display="none"; };
+  document.getElementById("finishPolyBtn").onclick=finishPoly;
+
+  /* ---------- confidence ---------- */
+  function confidenceFor(pixelLen){
+    const res = imgNatural.w*imgNatural.h;
+    let score=0;
+    if(pixelLen>60) score+=2; else if(pixelLen>25) score+=1;
+    if(res>1500000) score+=2; else if(res>500000) score+=1;
+    if(scaleMMperPX!==null) score+=1;
+    if(score>=4) return "high";
+    if(score>=2) return "medium";
+    return "low";
+  }
+  function badge(level){ return `<span class="badge ${level}">${level}</span>`; }
+
+  /* ---------- finishers ---------- */
+  function finishCalibration(){
+    const len=parseFloat(document.getElementById("refLength").value);
+    const unit=document.getElementById("refUnit").value;
+    if(!len || len<=0){ alert("Enter the reference object's real length first."); points=[]; draw(); return; }
+    const pxLen=dist(points[0],points[1]);
+    if(pxLen<2){ alert("Points too close together."); points=[]; draw(); return; }
+    scaleMMperPX = toMM(len,unit)/pxLen;
+    showResults([{label:"Reference calibrated",value:`${len} ${unit} = ${pxLen.toFixed(1)} px`,extra:`Scale: ${scaleMMperPX.toFixed(4)} mm/px`,conf:confidenceFor(pxLen)}]);
+    addHistory("calibrate", points.slice(), `Reference: ${len} ${unit}`);
+    points=[];
+  }
+  function displayUnit(){ return document.getElementById("dispUnit").value; }
+  function fmt(mm){ return fromMM(mm, displayUnit()).toFixed(2)+" "+displayUnit(); }
+
+  function finishLine(){
+    const pxLen=dist(points[0],points[1]);
+    const mm=pxLen*scaleMMperPX;
+    showResults([{label:"Length",value:fmt(mm),extra:`${pxLen.toFixed(1)} px \u00d7 ${scaleMMperPX.toFixed(4)} mm/px`,conf:confidenceFor(pxLen)}]);
+    addHistory("line", points.slice(), `Length: ${fmt(mm)}`);
+    points=[];
+  }
+  function finishRect(){
+    const w1=dist(points[0],points[1]), w2=dist(points[2],points[3]);
+    const h1=dist(points[1],points[2]), h2=dist(points[3],points[0]);
+    const w=(w1+w2)/2, h=(h1+h2)/2;
+    const wMM=w*scaleMMperPX, hMM=h*scaleMMperPX;
+    const areaMM2 = wMM*hMM;
+    const perimMM = 2*(wMM+hMM);
+    const minSide=Math.min(w1,w2,h1,h2);
+    showResults([
+      {label:"Width",value:fmt(wMM),conf:confidenceFor(minSide)},
+      {label:"Height",value:fmt(hMM),conf:confidenceFor(minSide)},
+      {label:"Area",value:(areaMM2/toMM(1,displayUnit())**2 ).toFixed(2)+" sq "+displayUnit(),conf:confidenceFor(minSide)},
+      {label:"Perimeter",value:fmt(perimMM),conf:confidenceFor(minSide)}
+    ]);
+    addHistory("rect", points.slice(), `Rect: ${fmt(wMM)} \u00d7 ${fmt(hMM)}`);
+    points=[];
+  }
+  function finishCircle(){
+    const r=dist(points[0],points[1]);
+    const dMM=2*r*scaleMMperPX;
+    showResults([{label:"Diameter",value:fmt(dMM),conf:confidenceFor(r)},
+      {label:"Circumference",value:fmt(Math.PI*dMM),conf:confidenceFor(r)}]);
+    addHistory("circle", points.slice(), `Diameter: ${fmt(dMM)}`);
+    points=[];
+  }
+  function finishPoly(){
+    if(points.length<3) return;
+    const areaPX = shoelaceArea(points);
+    const perimPX = perimeter(points,true);
+    const areaMM2 = areaPX*(scaleMMperPX**2);
+    const perimMM = perimPX*scaleMMperPX;
+    const avgSide = perimPX/points.length;
+    showResults([
+      {label:"Area",value:(areaMM2/toMM(1,displayUnit())**2).toFixed(2)+" sq "+displayUnit(),conf:confidenceFor(avgSide)},
+      {label:"Perimeter",value:fmt(perimMM),conf:confidenceFor(avgSide)}
+    ]);
+    addHistory("poly", points.slice(), `Polygon area: ${(areaMM2/toMM(1,displayUnit())**2).toFixed(2)} sq ${displayUnit()}`);
+    points=[];
+    document.getElementById("finishPolyBtn").style.display="none";
+    draw();
+  }
+
+  /* ---------- results / history ---------- */
+  function showResults(items){
+    document.getElementById("resultsCard").style.display="block";
+    document.getElementById("resultsBody").innerHTML = items.map(it=>`
+      <div class="result-row">
+        <span>${it.label}${it.extra?`<br><span class="muted">${it.extra}</span>`:""}</span>
+        <span>${badge(it.conf)} <span class="result-value">${it.value}</span></span>
+      </div>`).join("");
+  }
+  function addHistory(m, canvasPoints, summary){
+    history.push({mode:m, canvasPoints, summary, time:new Date().toLocaleTimeString()});
+    sessionStorage.setItem("sv_history", JSON.stringify(history));
+    renderHistory();
+  }
+  function renderHistory(){
+    const card=document.getElementById("historyCard");
+    if(history.length===0){ card.style.display="none"; return; }
+    card.style.display="block";
+    document.getElementById("historyBody").innerHTML = history.map((h,i)=>`
+      <div class="result-row"><span>${i+1}. ${h.summary}</span><span class="muted">${h.time}</span></div>
+    `).join("");
+  }
+  document.getElementById("clearHistBtn").onclick=()=>{
+    history=[]; sessionStorage.removeItem("sv_history"); renderHistory(); draw();
+  };
+
+  document.getElementById("exportCsvBtn").onclick=async ()=>{
+    const rows=[["#","mode","summary","time"]];
+    history.forEach((h,i)=>rows.push([i+1,h.mode,h.summary.replace(/,/g," "),h.time]));
+    const csv=rows.map(r=>r.join(",")).join("\n");
+    if(downloads){
+      try{ await downloads.save({filename:"scalevision_measurements.csv", data:csv}); return; }catch(e){}
+    }
+    const a=document.createElement("a");
+    a.href="data:text/csv;charset=utf-8,"+encodeURIComponent(csv);
+    a.download="scalevision_measurements.csv"; a.click();
+  };
+  
