@@ -11,7 +11,6 @@
  * wherever the page is currently hosted (window.location), moving the
  * app to a new domain later needs no code changes at all.
  */
-alert("updated");
 
   
 (() => {
